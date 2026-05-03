@@ -56,14 +56,24 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       let nextDifficulty = difficulty;
       let shouldLevelUp = false;
 
-      // Auto level up logic
-      if (newStreak === 5) {
+      // Auto level up or Victory logic
+      if (newStreak === 7) {
         if (difficulty === 'easy') {
           nextDifficulty = 'medium';
           shouldLevelUp = true;
         } else if (difficulty === 'medium') {
           nextDifficulty = 'hard';
           shouldLevelUp = true;
+        } else if (difficulty === 'hard') {
+          // Victory condition
+          setTimeout(() => {
+            setGameState('finished');
+            setFeedback(null);
+            setIsProcessing(false);
+          }, 1500); // Wait for the "correct" feedback before showing victory
+          
+          setScore(prev => prev + 100); // Big bonus for winning
+          return; // Exit early so we don't trigger the standard timeout below
         }
       }
 
@@ -76,7 +86,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       } else {
         setStreak(newStreak);
         let points = 10;
-        if (newStreak >= 5) points += 10; // Only happens on 'hard' mode since we reset streak when levelling up
+        if (newStreak >= 7) points += 10; 
         else if (newStreak >= 3) points += 5;
         setScore(prev => prev + points);
       }

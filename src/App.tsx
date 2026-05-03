@@ -2,6 +2,7 @@ import React from 'react';
 import { GameProvider, useGame } from './context/GameContext';
 import { StartMenu } from './components/game/StartMenu';
 import { GameScreen } from './components/game/GameScreen';
+import { VictoryScreen } from './components/game/VictoryScreen';
 import { AnimatePresence } from 'framer-motion';
 
 const GameOrchestrator: React.FC = () => {
@@ -16,11 +17,9 @@ const GameOrchestrator: React.FC = () => {
 
       <div className="z-10 w-full h-full flex flex-col items-center justify-center">
         <AnimatePresence mode="wait">
-          {gameState === 'idle' ? (
-            <StartMenu key="start-menu" />
-          ) : (
-            <GameScreen key="game-screen" />
-          )}
+          {gameState === 'idle' && <StartMenu key="start-menu" />}
+          {gameState === 'playing' && <GameScreen key="game-screen" />}
+          {gameState === 'finished' && <VictoryScreen key="victory-screen" />}
         </AnimatePresence>
       </div>
     </div>
