@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@theme {
+  --color-math-blue: #3B82F6;
+  --color-math-green: #10B981;
+  --color-math-red: #EF4444;
+  --color-math-yellow: #F59E0B;
+  --color-math-purple: #8B5CF6;
+  --color-math-bg: #EFF6FF;
+  
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Outfit', system-ui, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-math-bg text-gray-900 font-sans overflow-hidden select-none;
+  }
+}
