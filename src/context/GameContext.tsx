@@ -31,6 +31,8 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
   const [feedback, setFeedback] = useState<FeedbackState>(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
+  const [isLevelingUp, setIsLevelingUp] = useState(false);
+
   const startGame = (mode: GameMode, diff: Difficulty) => {
     setGameMode(mode);
     setDifficulty(diff);
@@ -39,6 +41,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     setCurrentQuestion(generateQuestion(mode, diff));
     setGameState('playing');
     setFeedback(null);
+    setIsLevelingUp(false);
   };
 
   const submitAnswer = (answer: number | string) => {
@@ -50,31 +53,66 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     if (isCorrect) {
       setFeedback('correct');
       const newStreak = streak + 1;
-      setStreak(newStreak);
-      
-      let points = 10;
-      if (newStreak >= 5) points += 10;
-      else if (newStreak >= 3) points += 5;
-      
-      setScore(prev => prev + points);
+      let nextDifficulty = difficulty;
+      let shouldLevelUp = false;
+
+      // Auto level up logic
+      if (newStreak === 5) {
+        if (difficulty === 'easy') {
+          nextDifficulty = 'medium';
+          shouldLevelUp = true;
+        } else if (difficulty === 'medium') {
+          nextDifficulty = 'hard';
+          shouldLevelUp = true;
+        }
+      }
+
+      if (shouldLevelUp) {
+        setDifficulty(nextDifficulty);
+        setStreak(0); // Reset streak after leveling up
+        setIsLevelingUp(true);
+        // Bonus points for leveling up
+        setScore(prev => prev + 50);
+      } else {
+        setStreak(newStreak);
+        let points = 10;
+        if (newStreak >= 5) points += 10; // Only happens on 'hard' mode since we reset streak when levelling up
+        else if (newStreak >= 3) points += 5;
+        setScore(prev => prev + points);
+      }
+
+      // Wait a bit to show feedback
+      setTimeout(() => {
+        setCurrentQuestion(generateQuestion(gameMode, nextDifficulty));
+        setFeedback(null);
+        if (shouldLevelUp) {
+          setTimeout(() => {
+            setIsLevelingUp(false);
+            setIsProcessing(false);
+          }, 2000); // 2 extra seconds for the level up animation
+        } else {
+          setIsProcessing(false);
+        }
+      }, 1500);
+
     } else {
       setFeedback('wrong');
       setStreak(0);
       setScore(prev => Math.max(0, prev - 5));
-    }
 
-    // Wait a bit to show feedback, then next question
-    setTimeout(() => {
-      setCurrentQuestion(generateQuestion(gameMode, difficulty));
-      setFeedback(null);
-      setIsProcessing(false);
-    }, 1500);
+      setTimeout(() => {
+        setCurrentQuestion(generateQuestion(gameMode, difficulty));
+        setFeedback(null);
+        setIsProcessing(false);
+      }, 1500);
+    }
   };
 
   const quitGame = () => {
     setGameState('idle');
     setCurrentQuestion(null);
     setFeedback(null);
+    setIsLevelingUp(false);
   };
 
   return (
@@ -86,6 +124,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
       streak,
       currentQuestion,
       feedback,
+      isLevelingUp,
       startGame,
       submitAnswer,
       quitGame
