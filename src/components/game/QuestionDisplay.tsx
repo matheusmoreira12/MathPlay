@@ -31,7 +31,14 @@ export const QuestionDisplay: React.FC = () => {
           transition={{ type: 'spring', bounce: 0.5 }}
           className="flex items-center justify-center gap-4 md:gap-8 text-6xl md:text-8xl font-display font-black text-slate-800"
         >
-          {gameMode === 'result' ? (
+          {gameMode === 'logic' ? (
+            <div className={`${(currentQuestion.questionText?.length || 0) > 20 ? 'text-2xl md:text-4xl px-4' : 'text-5xl md:text-7xl'} leading-tight text-center font-black text-slate-800 flex flex-col items-center gap-4`}>
+              <span>{currentQuestion.questionText?.replace('?', '')}</span>
+              <span className={`min-w-[5rem] md:min-w-[8rem] px-4 h-16 md:h-24 rounded-3xl flex items-center justify-center transition-colors shadow-inner ${getFeedbackColor()}`}>
+                {feedback === 'correct' ? currentQuestion.correctAnswer : '?'}
+              </span>
+            </div>
+          ) : gameMode === 'result' ? (
             <>
               <span className="text-math-blue">{currentQuestion.num1}</span>
               <span className="text-slate-300">{formatOperator(currentQuestion.operator)}</span>

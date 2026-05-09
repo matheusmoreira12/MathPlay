@@ -28,7 +28,7 @@ export const StartMenu: React.FC = () => {
       <h1 className="text-5xl font-display font-black text-slate-800 tracking-tight mb-2">MathPlay</h1>
       <p className="text-slate-500 text-lg mb-8 font-medium">Bora aprender brincando!</p>
 
-      <div className="w-full relative h-[250px]">
+      <div className="w-full relative h-[340px]">
         <AnimatePresence mode="wait">
           {!selectedMode ? (
             <motion.div 
@@ -41,7 +41,7 @@ export const StartMenu: React.FC = () => {
               <Button 
                 variant="primary" 
                 size="lg" 
-                className="w-full h-[100px] text-2xl flex flex-col items-center justify-center gap-1"
+                className="w-full h-24 text-2xl flex flex-col items-center justify-center gap-1"
                 onClick={() => setSelectedMode('result')}
               >
                 <span>Descubra o Resultado</span>
@@ -50,11 +50,20 @@ export const StartMenu: React.FC = () => {
               <Button 
                 variant="secondary" 
                 size="lg" 
-                className="w-full h-[100px] text-2xl flex flex-col items-center justify-center gap-1"
+                className="w-full h-24 text-2xl flex flex-col items-center justify-center gap-1"
                 onClick={() => setSelectedMode('operator')}
               >
                 <span>Descubra a Operação</span>
                 <span className="text-amber-700 text-sm font-normal tracking-widest">A [ ? ] B = C</span>
+              </Button>
+              <Button 
+                variant="danger" 
+                size="lg" 
+                className="w-full h-24 text-2xl flex flex-col items-center justify-center gap-1"
+                onClick={() => setSelectedMode('logic')}
+              >
+                <span>Raciocínio Lógico</span>
+                <span className="text-red-200 text-sm font-normal tracking-widest">Padrões e Desafios</span>
               </Button>
             </motion.div>
           ) : (
