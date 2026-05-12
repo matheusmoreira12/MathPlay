@@ -14,6 +14,7 @@ interface GameContextType {
   streak: number;
   currentQuestion: Question | null;
   feedback: FeedbackState;
+  isLevelingUp: boolean;
   startGame: (mode: GameMode, diff: Difficulty) => void;
   submitAnswer: (answer: number | string) => void;
   quitGame: () => void;
