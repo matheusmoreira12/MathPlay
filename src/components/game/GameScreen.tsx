@@ -43,7 +43,7 @@ export const GameScreen: React.FC = () => {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="flex flex-col items-center justify-center w-full max-w-4xl h-full p-4 md:p-8 relative"
+        className="flex flex-col items-center justify-start w-full max-w-4xl h-auto p-2 md:p-4 relative"
       >
         <ScoreBoard />
         
