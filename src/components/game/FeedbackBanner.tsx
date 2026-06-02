@@ -1,7 +1,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGame } from '../../context/GameContext';
-import { CheckCircle2, XCircle } from 'lucide-react';
+import { EstrelaDaVitoria } from './animations/EstrelaDaVitoria';
+import { NuvemTriste } from './animations/NuvemTriste';
 
 export const FeedbackBanner: React.FC = () => {
   const { feedback, currentQuestion } = useGame();
@@ -13,32 +14,38 @@ export const FeedbackBanner: React.FC = () => {
   };
 
   return (
-    <div className="h-24 w-full flex items-center justify-center mt-6">
+    <div className="h-40 w-full flex items-center justify-center mt-4 mb-4 select-none">
       <AnimatePresence mode="wait">
         {feedback === 'correct' && (
           <motion.div
             key="correct"
-            initial={{ y: 20, opacity: 0, scale: 0.9 }}
+            initial={{ y: 30, opacity: 0, scale: 0.85 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: 20, opacity: 0, scale: 0.9 }}
-            className="flex items-center gap-3 bg-math-green text-white px-8 py-4 rounded-full shadow-lg font-bold text-2xl"
+            exit={{ y: -30, opacity: 0, scale: 0.85 }}
+            className="flex flex-col md:flex-row items-center gap-4 md:gap-6 bg-math-green text-white px-8 py-3 rounded-[2.5rem] shadow-xl border-4 border-white font-bold"
           >
-            <CheckCircle2 size={32} />
-            <span>Excelente!</span>
+            <EstrelaDaVitoria />
+            <div className="flex flex-col items-center md:items-start">
+              <span className="text-3xl font-display font-black tracking-wide leading-tight">Muito Bem!</span>
+              <span className="text-sm font-normal text-emerald-100">Você acertou essa! Continue brilhando! ⭐</span>
+            </div>
           </motion.div>
         )}
 
         {feedback === 'wrong' && currentQuestion && (
           <motion.div
             key="wrong"
-            initial={{ y: 20, opacity: 0, scale: 0.9 }}
+            initial={{ y: 30, opacity: 0, scale: 0.85 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: 20, opacity: 0, scale: 0.9 }}
-            className="flex flex-col items-center justify-center bg-math-red text-white px-8 py-3 rounded-3xl shadow-lg font-bold text-center"
+            exit={{ y: -30, opacity: 0, scale: 0.85 }}
+            className="flex flex-col md:flex-row items-center gap-4 md:gap-6 bg-math-red text-white px-8 py-3 rounded-[2.5rem] shadow-xl border-4 border-white font-bold"
           >
-            <div className="flex items-center gap-2 text-xl">
-              <XCircle size={24} />
-              <span>Ops, a resposta era {formatAnswer(currentQuestion.correctAnswer)}</span>
+            <NuvemTriste />
+            <div className="flex flex-col items-center md:items-start text-center md:text-left">
+              <span className="text-2xl font-display font-black tracking-wide leading-tight">Ops, quase!</span>
+              <span className="text-lg font-bold text-red-100">
+                A resposta certa era: <span className="underline font-black text-2xl">{formatAnswer(currentQuestion.correctAnswer)}</span>
+              </span>
             </div>
           </motion.div>
         )}

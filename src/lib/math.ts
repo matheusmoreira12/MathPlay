@@ -1,6 +1,8 @@
 export type Difficulty = 'easy' | 'medium' | 'hard';
 export type Operator = '+' | '-' | '*' | '/';
-export type GameMode = 'result' | 'operator' | 'logic';
+export type GameMode = 'term' | 'logic';
+export type Grade = '3' | '4' | '5';
+export type BlankType = 'num1' | 'num2' | 'operator' | 'result';
 
 export interface Question {
   num1: number;
@@ -11,6 +13,7 @@ export interface Question {
   mode: GameMode;
   resultValue: number;
   questionText?: string;
+  blankType?: BlankType;
 }
 
 const getRandomInt = (min: number, max: number) => {
@@ -26,21 +29,20 @@ const shuffleArray = <T>(array: T[]): T[] => {
   return newArray;
 };
 
-const generateDistractors = (correctAnswer: number): number[] => {
+const generateDistractorsForValue = (correctValue: number, minVal: number = 0): number[] => {
   const distractors = new Set<number>();
   
   while (distractors.size < 3) {
     const variation = getRandomInt(-5, 5);
-    let distractor = correctAnswer + variation;
+    let distractor = correctValue + variation;
     
-    // Some logic for common mistakes
     if (Math.random() > 0.7) {
-      distractor = correctAnswer + 10;
+      distractor = correctValue + 10;
     } else if (Math.random() > 0.7) {
-      distractor = correctAnswer - 10;
+      distractor = correctValue - 10;
     }
 
-    if (distractor !== correctAnswer && distractor >= 0) {
+    if (distractor !== correctValue && distractor >= minVal) {
       distractors.add(distractor);
     }
   }
@@ -55,76 +57,170 @@ const calculate = (n1: number, n2: number, op: Operator): number => {
     case '*': return n1 * n2;
     case '/': return n1 / n2;
   }
-}
+};
 
-const generateLogicQuestion = (difficulty: Difficulty): Partial<Question> => {
+// Database with Gender for logically coherent grammar
+const NAMES = [
+  { name: 'Ana', gender: 'F' },
+  { name: 'Maria', gender: 'F' },
+  { name: 'Bia', gender: 'F' },
+  { name: 'Carol', gender: 'F' },
+  { name: 'Júlia', gender: 'F' },
+  { name: 'João', gender: 'M' },
+  { name: 'Pedro', gender: 'M' },
+  { name: 'Lucas', gender: 'M' },
+  { name: 'Mateus', gender: 'M' },
+  { name: 'Felipe', gender: 'M' }
+] as const;
+
+const ITEMS = [
+  { text: 'maçãs', gender: 'F' },
+  { text: 'laranjas', gender: 'F' },
+  { text: 'figurinhas', gender: 'F' },
+  { text: 'bolinhas', gender: 'F' },
+  { text: 'canetas', gender: 'F' },
+  { text: 'carrinhos', gender: 'M' },
+  { text: 'lápis', gender: 'M' },
+  { text: 'balões', gender: 'M' },
+  { text: 'livros', gender: 'M' },
+  { text: 'cards', gender: 'M' }
+] as const;
+
+const generateLogicQuestion = (difficulty: Difficulty, grade: Grade): Partial<Question> => {
   const isTextual = Math.random() > 0.5;
 
   if (isTextual) {
+    const char = NAMES[getRandomInt(0, NAMES.length - 1)];
+    const item = ITEMS[getRandomInt(0, ITEMS.length - 1)];
+    
+    const pronoun = char.gender === 'F' ? 'Ela' : 'Ele';
+    const pronounCont = char.gender === 'F' ? 'ela' : 'ele';
+    const article = item.gender === 'F' ? 'quantas' : 'quantos';
+    const articleCapital = item.gender === 'F' ? 'Quantas' : 'Quantos';
+
     if (difficulty === 'easy') {
-      const names = ['Ana', 'Maria', 'João', 'Pedro', 'Lucas', 'Bia'];
-      const name = names[getRandomInt(0, names.length - 1)];
-      const items = ['maçãs', 'laranjas', 'figurinhas', 'bolinhas'];
-      const item = items[getRandomInt(0, items.length - 1)];
-      const n1 = getRandomInt(5, 15);
-      const n2 = getRandomInt(1, 5);
+      // Scale numbers by grade
+      const maxNum = grade === '3' ? 15 : grade === '4' ? 30 : 50;
+      const n1 = getRandomInt(5, maxNum);
+      const n2 = getRandomInt(1, 10);
       
       if (Math.random() > 0.5) {
-        // Soma
+        // Addition
         return {
-          questionText: `${name} tinha ${n1} ${item} e ganhou mais ${n2}. Quantas ela tem agora?`,
+          questionText: `${char.name} tinha ${n1} ${item.text} e ganhou mais ${n2}. ${pronoun} tem ${article} agora?`,
           correctAnswer: n1 + n2,
           options: shuffleArray([n1 + n2, n1 + n2 + 1, n1 + n2 - 1, n1 + n2 + 2])
         };
       } else {
-        // Subtração
+        // Subtraction
+        const subN2 = Math.min(n2, n1);
         return {
-          questionText: `${name} tinha ${n1} ${item} e deu ${n2} para seu amigo. Quantas sobraram?`,
-          correctAnswer: n1 - n2,
-          options: shuffleArray([n1 - n2, n1 - n2 + 1, n1 - n2 - 1, n1 - n2 + 2])
+          questionText: `${char.name} tinha ${n1} ${item.text} e deu ${subN2} para seu amigo. ${articleCapital} sobraram com ${pronounCont}?`,
+          correctAnswer: n1 - subN2,
+          options: shuffleArray([n1 - subN2, n1 - subN2 + 1, n1 - subN2 - 1, n1 - subN2 + 2])
         };
       }
     } else if (difficulty === 'medium') {
       if (Math.random() > 0.5) {
-        // Multiplicação simples
-        const n1 = getRandomInt(2, 5);
-        const n2 = getRandomInt(3, 6);
+        // Simple multiplication text problems
+        const n1 = grade === '3' ? getRandomInt(2, 5) : getRandomInt(3, 8);
+        const n2 = grade === '3' ? getRandomInt(2, 5) : getRandomInt(4, 9);
         return {
-          questionText: `Em uma caixa há ${n1} pacotes com ${n2} figurinhas em cada um. Quantas figurinhas há no total?`,
+          questionText: `Em uma caixa há ${n1} pacotes com ${n2} ${item.text} em cada um. ${articleCapital} ${item.text} há no total?`,
           correctAnswer: n1 * n2,
           options: shuffleArray([n1 * n2, (n1 + 1) * n2, n1 * (n2 + 1), n1 * n2 - 2])
         };
       } else {
-        // Dois passos
-        const n1 = getRandomInt(10, 20);
-        const n2 = getRandomInt(5, 10);
-        const n3 = getRandomInt(2, 4);
+        // Two-step problems
+        const n1 = grade === '3' ? getRandomInt(10, 20) : grade === '4' ? getRandomInt(20, 50) : getRandomInt(50, 100);
+        const n2 = grade === '3' ? getRandomInt(5, 10) : grade === '4' ? getRandomInt(10, 25) : getRandomInt(25, 50);
+        const n3 = grade === '3' ? getRandomInt(2, 6) : grade === '4' ? getRandomInt(5, 15) : getRandomInt(10, 30);
         return {
-          questionText: `Carlos tinha ${n1} reais. Ganhou ${n2} e gastou ${n3}. Com quanto ele ficou?`,
+          questionText: `${char.name} tinha ${n1} reais. Ganhou ${n2} e gastou ${n3}. Com quanto ${pronounCont} ficou?`,
           correctAnswer: n1 + n2 - n3,
           options: shuffleArray([n1 + n2 - n3, n1 + n2, n1 - n3, n1 + n2 - n3 + 5])
         };
       }
     } else {
-      // Hard: Lógica estrutural (ordem)
-      const people = shuffleArray(['Ana', 'Pedro', 'Lucas', 'Bia']);
-      // Ex: Ana chegou antes de Pedro. Pedro chegou antes de Lucas. Quem chegou primeiro?
-      const p1 = people[0];
-      const p2 = people[1];
-      const p3 = people[2];
-      
-      if (Math.random() > 0.5) {
-        return {
-          questionText: `${p1} chegou antes de ${p2}, e ${p2} chegou antes de ${p3}. Quem foi o primeiro a chegar?`,
-          correctAnswer: p1,
-          options: shuffleArray([p1, p2, p3, people[3]])
-        };
+      // Hard: Relational numerical logic problems (Heights, Ages, Weights)
+      const selectedChars = shuffleArray([...NAMES]).slice(0, 3);
+      const c1 = selectedChars[0];
+      const c2 = selectedChars[1];
+      const c3 = selectedChars[2];
+
+      const typeChoice = getRandomInt(1, 3);
+      if (typeChoice === 1) {
+        // Alturas (Heights)
+        const heights = grade === '3' 
+          ? [140, 135, 130] 
+          : grade === '4' 
+            ? [155, 150, 145] 
+            : [165, 158, 152];
+        const h1 = heights[0];
+        const h2 = heights[1];
+        const h3 = heights[2];
+
+        if (Math.random() > 0.5) {
+          return {
+            questionText: `${c1.name} tem ${h1}cm de altura, ${c2.name} tem ${h2}cm e ${c3.name} tem ${h3}cm. Quem é a pessoa mais alta?`,
+            correctAnswer: c1.name,
+            options: shuffleArray([c1.name, c2.name, c3.name, 'Nenhuma'])
+          };
+        } else {
+          return {
+            questionText: `${c1.name} tem ${h1}cm de altura, ${c2.name} tem ${h2}cm e ${c3.name} tem ${h3}cm. Quem é a pessoa mais baixa?`,
+            correctAnswer: c3.name,
+            options: shuffleArray([c1.name, c2.name, c3.name, 'Nenhuma'])
+          };
+        }
+      } else if (typeChoice === 2) {
+        // Idades (Ages)
+        const ages = grade === '3' 
+          ? [9, 8, 7] 
+          : grade === '4' 
+            ? [11, 10, 9] 
+            : [12, 11, 10];
+        const a1 = ages[0];
+        const a2 = ages[1];
+        const a3 = ages[2];
+
+        if (Math.random() > 0.5) {
+          return {
+            questionText: `${c1.name} tem ${a1} anos, ${c2.name} tem ${a2} anos e ${c3.name} tem ${a3} anos. Quem é a pessoa mais velha?`,
+            correctAnswer: c1.name,
+            options: shuffleArray([c1.name, c2.name, c3.name, 'Nenhuma'])
+          };
+        } else {
+          return {
+            questionText: `${c1.name} tem ${a1} anos, ${c2.name} tem ${a2} anos e ${c3.name} tem ${a3} anos. Quem é a pessoa mais nova?`,
+            correctAnswer: c3.name,
+            options: shuffleArray([c1.name, c2.name, c3.name, 'Nenhuma'])
+          };
+        }
       } else {
-        return {
-          questionText: `${p1} é mais alto que ${p2}, e ${p2} é mais alto que ${p3}. Quem é o mais baixo?`,
-          correctAnswer: p3,
-          options: shuffleArray([p1, p2, p3, people[3]])
-        };
+        // Pesos (Weights)
+        const weights = grade === '3' 
+          ? [30, 27, 24] 
+          : grade === '4' 
+            ? [38, 34, 30] 
+            : [48, 42, 38];
+        const w1 = weights[0];
+        const w2 = weights[1];
+        const w3 = weights[2];
+
+        if (Math.random() > 0.5) {
+          return {
+            questionText: `${c1.name} pesa ${w1}kg, ${c2.name} pesa ${w2}kg e ${c3.name} pesa ${w3}kg. Quem é a pessoa mais pesada?`,
+            correctAnswer: c1.name,
+            options: shuffleArray([c1.name, c2.name, c3.name, 'Nenhuma'])
+          };
+        } else {
+          return {
+            questionText: `${c1.name} pesa ${w1}kg, ${c2.name} pesa ${w2}kg e ${c3.name} pesa ${w3}kg. Quem é a pessoa mais leve?`,
+            correctAnswer: c3.name,
+            options: shuffleArray([c1.name, c2.name, c3.name, 'Nenhuma'])
+          };
+        }
       }
     }
   } else {
@@ -134,59 +230,69 @@ const generateLogicQuestion = (difficulty: Difficulty): Partial<Question> => {
     
     if (difficulty === 'easy') {
       const start = getRandomInt(1, 10);
-      const step = getRandomInt(2, 5);
+      const step = grade === '3' ? getRandomInt(2, 3) : getRandomInt(2, 5);
       const isAdd = Math.random() > 0.5;
       for (let i = 0; i < 4; i++) {
-        sequence.push(isAdd ? start + i * step : 50 - i * step);
+        sequence.push(isAdd ? start + i * step : (grade === '3' ? 20 : 50) - i * step);
       }
-      nextValue = isAdd ? start + 4 * step : 50 - 4 * step;
+      nextValue = isAdd ? start + 4 * step : (grade === '3' ? 20 : 50) - 4 * step;
     } else if (difficulty === 'medium') {
-      if (Math.random() > 0.5) {
-        // Multiplicação
+      if (Math.random() > 0.5 && grade !== '3') {
+        // Multiplicação por 2 ou 3
         const start = getRandomInt(1, 3);
-        const factor = 2;
+        const factor = getRandomInt(2, 3);
         for (let i = 0; i < 4; i++) {
           sequence.push(start * Math.pow(factor, i));
         }
         nextValue = start * Math.pow(factor, 4);
       } else {
-        // Alternada (+2, +4, +2, +4...)
-        let current = getRandomInt(1, 10);
-        const s1 = 2;
-        const s2 = 4;
-        for (let i = 0; i < 4; i++) {
-          sequence.push(current);
-          current += (i % 2 === 0) ? s1 : s2;
+        // Alternada (+2, +4, +2...) ou simples saltos de 5/10 no 3º ano
+        if (grade === '3') {
+          const start = getRandomInt(5, 20);
+          const step = 5;
+          for (let i = 0; i < 4; i++) {
+            sequence.push(start + i * step);
+          }
+          nextValue = start + 4 * step;
+        } else {
+          let current = getRandomInt(1, 10);
+          const s1 = 2;
+          const s2 = 4;
+          for (let i = 0; i < 4; i++) {
+            sequence.push(current);
+            current += (i % 2 === 0) ? s1 : s2;
+          }
+          nextValue = current;
         }
-        nextValue = current;
       }
     } else {
       // Hard: Fibonacci ou saltos crescentes
-      if (Math.random() > 0.5) {
+      if (Math.random() > 0.5 && grade !== '3') {
         sequence = [1, 1, 2, 3, 5];
         nextValue = 8;
       } else {
         // Saltos crescentes (+1, +2, +3, +4...)
         let current = getRandomInt(1, 5);
+        const stepStart = grade === '3' ? 1 : 2;
         for (let i = 1; i <= 5; i++) {
           sequence.push(current);
-          current += i;
+          current += (i + stepStart);
         }
         nextValue = current;
       }
     }
     
     return {
-      questionText: sequence.join(', ') + ', ?',
+      questionText: `Complete a sequência numérica: ${sequence.join(', ')}, ?`,
       correctAnswer: nextValue,
       options: shuffleArray([nextValue, nextValue + 1, nextValue - 1, nextValue + 2])
     };
   }
 };
 
-export const generateQuestion = (mode: GameMode, difficulty: Difficulty): Question => {
+export const generateQuestion = (mode: GameMode, difficulty: Difficulty, grade: Grade): Question => {
   if (mode === 'logic') {
-    const logicData = generateLogicQuestion(difficulty);
+    const logicData = generateLogicQuestion(difficulty, grade);
     return {
       num1: 0,
       num2: 0,
@@ -199,6 +305,7 @@ export const generateQuestion = (mode: GameMode, difficulty: Difficulty): Questi
     };
   }
 
+  // --- MODO TERMO DESCONHECIDO (term) ---
   let num1 = 0;
   let num2 = 0;
   let operator: Operator = '+';
@@ -207,36 +314,106 @@ export const generateQuestion = (mode: GameMode, difficulty: Difficulty): Questi
   let isValid = false;
 
   while (!isValid) {
-    if (difficulty === 'easy') {
-      operator = Math.random() > 0.5 ? '+' : '-';
-      num1 = getRandomInt(1, 10);
-      num2 = getRandomInt(1, 10);
-    } else if (difficulty === 'medium') {
-      const ops: Operator[] = ['+', '-', '*'];
-      operator = ops[getRandomInt(0, 2)];
-      num1 = getRandomInt(1, 20);
-      num2 = getRandomInt(1, 20);
-      if (operator === '*') {
-        num1 = getRandomInt(2, 10);
-        num2 = getRandomInt(2, 10);
+    if (grade === '3') {
+      if (difficulty === 'easy') {
+        operator = Math.random() > 0.5 ? '+' : '-';
+        num1 = getRandomInt(1, 10);
+        num2 = getRandomInt(1, 10);
+      } else if (difficulty === 'medium') {
+        // Additions/subtractions up to 50, or simple multiplications by 2, 3, 4, 5
+        if (Math.random() > 0.4) {
+          operator = Math.random() > 0.5 ? '+' : '-';
+          num1 = getRandomInt(10, 35);
+          num2 = getRandomInt(1, 15);
+        } else {
+          operator = '*';
+          num1 = getRandomInt(2, 5);
+          num2 = getRandomInt(1, 5);
+        }
+      } else {
+        // Multiplications up to 5, and exact division by 2, 3, 4, 5
+        if (Math.random() > 0.5) {
+          operator = '*';
+          num1 = getRandomInt(2, 5);
+          num2 = getRandomInt(2, 9);
+        } else {
+          operator = '/';
+          const res = getRandomInt(2, 5);
+          num2 = getRandomInt(2, 5);
+          num1 = res * num2;
+        }
       }
-    } else {
-      const ops: Operator[] = ['+', '-', '*', '/'];
-      operator = ops[getRandomInt(0, 3)];
-      num1 = getRandomInt(10, 100);
-      num2 = getRandomInt(10, 100);
-      if (operator === '*') {
-        num1 = getRandomInt(2, 12);
-        num2 = getRandomInt(2, 12);
-      } else if (operator === '/') {
-        // Ensure exact division
-        const result = getRandomInt(2, 12);
-        num2 = getRandomInt(2, 12);
-        num1 = result * num2; 
+    } else if (grade === '4') {
+      if (difficulty === 'easy') {
+        operator = Math.random() > 0.5 ? '+' : '-';
+        num1 = getRandomInt(10, 50);
+        num2 = getRandomInt(1, 50);
+      } else if (difficulty === 'medium') {
+        // up to 500, multiplication advanced by single digit, exact division
+        const choice = getRandomInt(1, 3);
+        if (choice === 1) {
+          operator = Math.random() > 0.5 ? '+' : '-';
+          num1 = getRandomInt(50, 300);
+          num2 = getRandomInt(10, 200);
+        } else if (choice === 2) {
+          operator = '*';
+          num1 = getRandomInt(11, 20);
+          num2 = getRandomInt(2, 6);
+        } else {
+          operator = '/';
+          const res = getRandomInt(5, 12);
+          num2 = getRandomInt(2, 8);
+          num1 = res * num2;
+        }
+      } else {
+        // double-digit multiplications or divisions, mixed operations
+        if (Math.random() > 0.5) {
+          operator = '*';
+          num1 = getRandomInt(12, 25);
+          num2 = getRandomInt(3, 8);
+        } else {
+          operator = '/';
+          const res = getRandomInt(8, 15);
+          num2 = getRandomInt(3, 9);
+          num1 = res * num2;
+        }
+      }
+    } else { // Grade 5
+      if (difficulty === 'easy') {
+        operator = Math.random() > 0.5 ? '+' : '-';
+        num1 = getRandomInt(50, 500);
+        num2 = getRandomInt(10, 400);
+      } else if (difficulty === 'medium') {
+        const choice = getRandomInt(1, 3);
+        if (choice === 1) {
+          operator = Math.random() > 0.5 ? '+' : '-';
+          num1 = getRandomInt(100, 900);
+          num2 = getRandomInt(50, 800);
+        } else if (choice === 2) {
+          operator = '*';
+          num1 = getRandomInt(12, 15);
+          num2 = getRandomInt(11, 15);
+        } else {
+          operator = '/';
+          const res = getRandomInt(10, 20);
+          num2 = getRandomInt(4, 12);
+          num1 = res * num2;
+        }
+      } else { // Hard 5th grade
+        if (Math.random() > 0.5) {
+          operator = '*';
+          num1 = getRandomInt(15, 30);
+          num2 = getRandomInt(12, 20);
+        } else {
+          operator = '/';
+          const res = getRandomInt(12, 25);
+          num2 = getRandomInt(8, 15);
+          num1 = res * num2;
+        }
       }
     }
 
-    // Ensure no negative results for subtraction
+    // Prevents negative results for subtraction
     if (operator === '-') {
       if (num1 < num2) {
         const temp = num1;
@@ -246,30 +423,42 @@ export const generateQuestion = (mode: GameMode, difficulty: Difficulty): Questi
     }
 
     numericalResult = calculate(num1, num2, operator);
+    isValid = true;
+  }
 
-    if (mode === 'operator') {
-      // Rule: There must be ONLY ONE operator that yields this exact result for these two numbers
-      const allOps: Operator[] = ['+', '-', '*', '/'];
-      let validOpsCount = 0;
-      
-      for (const op of allOps) {
-        // avoid division by zero just in case (though n2 is always >= 1 here)
-        if (op === '/' && num2 === 0) continue; 
-        if (calculate(num1, num2, op) === numericalResult) {
-          validOpsCount++;
-        }
-      }
+  // Choose which term of the equation to hide: num1, num2, operator, or result
+  // Note: operator hide is more interesting if the numbers are small and the operands fit cleanly.
+  // We hide result 40% of time, num1 20%, num2 20%, operator 20%
+  const rand = Math.random();
+  let blankType: BlankType = 'result';
+  if (rand < 0.4) {
+    blankType = 'result';
+  } else if (rand < 0.6) {
+    blankType = 'num1';
+  } else if (rand < 0.8) {
+    blankType = 'num2';
+  } else {
+    blankType = 'operator';
+  }
 
-      if (validOpsCount === 1) {
-        isValid = true;
+  // Validate operator uniqueness if we blank out the operator
+  if (blankType === 'operator') {
+    const allOps: Operator[] = ['+', '-', '*', '/'];
+    let validOpsCount = 0;
+    for (const op of allOps) {
+      if (op === '/' && num2 === 0) continue;
+      if (calculate(num1, num2, op) === numericalResult) {
+        validOpsCount++;
       }
-    } else {
-      isValid = true;
+    }
+    // If multiple operators yield the same result (e.g. 2 + 2 = 4 and 2 * 2 = 4), default to hiding the result instead
+    if (validOpsCount > 1) {
+      blankType = 'result';
     }
   }
 
-  if (mode === 'result') {
-    const distractors = generateDistractors(numericalResult);
+  if (blankType === 'result') {
+    const distractors = generateDistractorsForValue(numericalResult);
     const options = shuffleArray([numericalResult, ...distractors]);
     return {
       num1,
@@ -277,12 +466,38 @@ export const generateQuestion = (mode: GameMode, difficulty: Difficulty): Questi
       operator,
       correctAnswer: numericalResult,
       options,
-      mode,
-      resultValue: numericalResult
+      mode: 'term',
+      resultValue: numericalResult,
+      blankType
+    };
+  } else if (blankType === 'num1') {
+    const distractors = generateDistractorsForValue(num1, 1);
+    const options = shuffleArray([num1, ...distractors]);
+    return {
+      num1,
+      num2,
+      operator,
+      correctAnswer: num1,
+      options,
+      mode: 'term',
+      resultValue: numericalResult,
+      blankType
+    };
+  } else if (blankType === 'num2') {
+    const distractors = generateDistractorsForValue(num2, 1);
+    const options = shuffleArray([num2, ...distractors]);
+    return {
+      num1,
+      num2,
+      operator,
+      correctAnswer: num2,
+      options,
+      mode: 'term',
+      resultValue: numericalResult,
+      blankType
     };
   } else {
-    // Mode is operator
-    // The options are always the 4 operators
+    // operator blank
     const options = ['+', '-', '*', '/'];
     return {
       num1,
@@ -290,8 +505,9 @@ export const generateQuestion = (mode: GameMode, difficulty: Difficulty): Questi
       operator,
       correctAnswer: operator,
       options,
-      mode,
-      resultValue: numericalResult
+      mode: 'term',
+      resultValue: numericalResult,
+      blankType
     };
   }
 };
