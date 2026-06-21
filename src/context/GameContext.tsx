@@ -30,8 +30,14 @@ interface GameContextType {
 
 const GameContext = createContext<GameContextType | undefined>(undefined);
 
-const getTimeLimitForDifficulty = (diff: Difficulty): number => {
-  if (diff === 'easy') return 25;
+const getTimeLimitForDifficulty = (diff: Difficulty, grade: Grade): number => {
+  if (grade === '3' || grade === '4') {
+    if (diff === 'easy') return 50;
+    if (diff === 'medium') return 40;
+    return 30;
+  }
+  // Grade 5
+  if (diff === 'easy') return 30;
   if (diff === 'medium') return 20;
   return 15;
 };
@@ -82,7 +88,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
     setScore(0);
     setStreak(0);
     setLives(3);
-    setTimeLeft(getTimeLimitForDifficulty('easy'));
+    setTimeLeft(getTimeLimitForDifficulty('easy', grade));
     setIsPaused(false);
     setGameResult(null);
     setCurrentQuestion(generateQuestion(mode, 'easy', grade));
@@ -112,7 +118,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         setTimeout(() => {
           setCurrentQuestion(generateQuestion(gameMode, difficulty, grade));
           setFeedback(null);
-          setTimeLeft(getTimeLimitForDifficulty(difficulty));
+          setTimeLeft(getTimeLimitForDifficulty(difficulty, grade));
           setIsProcessing(false);
         }, 2000);
       }
@@ -174,7 +180,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         setTimeout(() => {
           setCurrentQuestion(generateQuestion(gameMode, nextDifficulty, grade));
           setFeedback(null);
-          setTimeLeft(getTimeLimitForDifficulty(nextDifficulty));
+          setTimeLeft(getTimeLimitForDifficulty(nextDifficulty, grade));
           setTimeout(() => {
             setIsLevelingUp(false);
             setIsProcessing(false);
@@ -185,7 +191,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
         setTimeout(() => {
           setCurrentQuestion(generateQuestion(gameMode, difficulty, grade));
           setFeedback(null);
-          setTimeLeft(getTimeLimitForDifficulty(difficulty));
+          setTimeLeft(getTimeLimitForDifficulty(difficulty, grade));
           setIsProcessing(false);
         }, 1500);
       }
@@ -207,7 +213,7 @@ export const GameProvider = ({ children }: { children: ReactNode }) => {
           setTimeout(() => {
             setCurrentQuestion(generateQuestion(gameMode, difficulty, grade));
             setFeedback(null);
-            setTimeLeft(getTimeLimitForDifficulty(difficulty));
+            setTimeLeft(getTimeLimitForDifficulty(difficulty, grade));
             setIsProcessing(false);
           }, 1500);
         }

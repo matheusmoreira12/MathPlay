@@ -59,6 +59,27 @@ const calculate = (n1: number, n2: number, op: Operator): number => {
   }
 };
 
+const getRandomWithDigits = (digits: number, avoidTrivial: boolean = false): number => {
+  if (digits <= 1) {
+    return avoidTrivial ? getRandomInt(2, 9) : getRandomInt(1, 9);
+  }
+  const min = Math.pow(10, digits - 1);
+  const max = Math.pow(10, digits) - 1;
+  return getRandomInt(min, max);
+};
+
+const ADD_SUB_DIGITS: Record<Grade, Record<Difficulty, number>> = {
+  '3': { easy: 2, medium: 3, hard: 4 },
+  '4': { easy: 2, medium: 3, hard: 4 },
+  '5': { easy: 3, medium: 4, hard: 5 },
+};
+
+const MULT_DIGITS: Record<Grade, Record<Difficulty, number>> = {
+  '3': { easy: 1, medium: 1, hard: 1 },
+  '4': { easy: 1, medium: 1, hard: 1 },
+  '5': { easy: 2, medium: 2, hard: 2 },
+};
+
 // Database with Gender for logically coherent grammar
 const NAMES = [
   { name: 'Ana', gender: 'F' },
@@ -314,100 +335,43 @@ export const generateQuestion = (mode: GameMode, difficulty: Difficulty, grade: 
   let isValid = false;
 
   while (!isValid) {
-    if (grade === '3') {
-      if (difficulty === 'easy') {
-        operator = Math.random() > 0.5 ? '+' : '-';
-        num1 = getRandomInt(1, 10);
-        num2 = getRandomInt(1, 10);
-      } else if (difficulty === 'medium') {
-        // Additions/subtractions up to 50, or simple multiplications by 2, 3, 4, 5
-        if (Math.random() > 0.4) {
-          operator = Math.random() > 0.5 ? '+' : '-';
-          num1 = getRandomInt(10, 35);
-          num2 = getRandomInt(1, 15);
-        } else {
-          operator = '*';
-          num1 = getRandomInt(2, 5);
-          num2 = getRandomInt(1, 5);
-        }
+    const randOp = Math.random();
+    const isFifthGrade = grade === '5';
+    
+    // Distribute operator probabilities
+    if (randOp < 0.25 || (randOp < 0.3 && !isFifthGrade)) {
+      operator = '+';
+    } else if (randOp < 0.50 || (randOp < 0.6 && !isFifthGrade)) {
+      operator = '-';
+    } else if (randOp < 0.75 || (randOp < 0.85 && !isFifthGrade)) {
+      operator = '*';
+    } else {
+      operator = '/';
+    }
+
+    if (operator === '+' || operator === '-') {
+      const digits = ADD_SUB_DIGITS[grade][difficulty];
+      num1 = getRandomWithDigits(digits);
+      num2 = getRandomWithDigits(digits);
+    } else if (operator === '*') {
+      const digits = MULT_DIGITS[grade][difficulty];
+      num1 = getRandomWithDigits(digits, true);
+      num2 = getRandomWithDigits(digits, true);
+    } else {
+      // Division (/)
+      if (grade === '3' || grade === '4') {
+        const res = getRandomInt(2, 9);
+        num2 = getRandomInt(2, 9);
+        num1 = res * num2;
       } else {
-        // Multiplications up to 5, and exact division by 2, 3, 4, 5
+        // 5th grade division: divisor 1-digit with result 2-digit, or divisor 2-digit with result 1-digit
         if (Math.random() > 0.5) {
-          operator = '*';
-          num1 = getRandomInt(2, 5);
+          const res = getRandomInt(10, 99);
           num2 = getRandomInt(2, 9);
-        } else {
-          operator = '/';
-          const res = getRandomInt(2, 5);
-          num2 = getRandomInt(2, 5);
           num1 = res * num2;
-        }
-      }
-    } else if (grade === '4') {
-      if (difficulty === 'easy') {
-        operator = Math.random() > 0.5 ? '+' : '-';
-        num1 = getRandomInt(10, 50);
-        num2 = getRandomInt(1, 50);
-      } else if (difficulty === 'medium') {
-        // up to 500, multiplication advanced by single digit, exact division
-        const choice = getRandomInt(1, 3);
-        if (choice === 1) {
-          operator = Math.random() > 0.5 ? '+' : '-';
-          num1 = getRandomInt(50, 300);
-          num2 = getRandomInt(10, 200);
-        } else if (choice === 2) {
-          operator = '*';
-          num1 = getRandomInt(11, 20);
-          num2 = getRandomInt(2, 6);
         } else {
-          operator = '/';
-          const res = getRandomInt(5, 12);
-          num2 = getRandomInt(2, 8);
-          num1 = res * num2;
-        }
-      } else {
-        // double-digit multiplications or divisions, mixed operations
-        if (Math.random() > 0.5) {
-          operator = '*';
-          num1 = getRandomInt(12, 25);
-          num2 = getRandomInt(3, 8);
-        } else {
-          operator = '/';
-          const res = getRandomInt(8, 15);
-          num2 = getRandomInt(3, 9);
-          num1 = res * num2;
-        }
-      }
-    } else { // Grade 5
-      if (difficulty === 'easy') {
-        operator = Math.random() > 0.5 ? '+' : '-';
-        num1 = getRandomInt(50, 500);
-        num2 = getRandomInt(10, 400);
-      } else if (difficulty === 'medium') {
-        const choice = getRandomInt(1, 3);
-        if (choice === 1) {
-          operator = Math.random() > 0.5 ? '+' : '-';
-          num1 = getRandomInt(100, 900);
-          num2 = getRandomInt(50, 800);
-        } else if (choice === 2) {
-          operator = '*';
-          num1 = getRandomInt(12, 15);
-          num2 = getRandomInt(11, 15);
-        } else {
-          operator = '/';
-          const res = getRandomInt(10, 20);
-          num2 = getRandomInt(4, 12);
-          num1 = res * num2;
-        }
-      } else { // Hard 5th grade
-        if (Math.random() > 0.5) {
-          operator = '*';
-          num1 = getRandomInt(15, 30);
-          num2 = getRandomInt(12, 20);
-        } else {
-          operator = '/';
-          const res = getRandomInt(12, 25);
-          num2 = getRandomInt(8, 15);
+          const res = getRandomInt(2, 9);
+          num2 = getRandomInt(10, 99);
           num1 = res * num2;
         }
       }
