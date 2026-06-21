@@ -29,7 +29,7 @@ export const QuestionDisplay: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[14rem] h-auto py-6 px-4 md:px-8 mb-6 w-full max-w-2xl bg-white rounded-[3rem] shadow-xl border-4 border-white overflow-hidden transition-all duration-300">
+    <div className="flex items-center justify-center min-h-[10rem] h-auto py-4 px-4 md:px-6 mb-4 w-full max-w-2xl bg-white rounded-[3rem] shadow-xl border-4 border-white overflow-hidden transition-all duration-300">
       <AnimatePresence mode="wait">
         <motion.div
           key={`${currentQuestion.num1}-${currentQuestion.operator}-${currentQuestion.num2}-${gameMode}-${currentQuestion.blankType}`}

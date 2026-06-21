@@ -14,7 +14,7 @@ export const FeedbackBanner: React.FC = () => {
   };
 
   return (
-    <div className="h-40 w-full flex items-center justify-center mt-4 mb-4 select-none">
+    <div className={`transition-all duration-300 ease-in-out ${feedback ? 'h-32 mt-4 mb-2 opacity-100' : 'h-0 mt-0 mb-0 opacity-0'} w-full flex items-center justify-center select-none overflow-hidden`}>
       <AnimatePresence mode="wait">
         {feedback === 'correct' && (
           <motion.div
