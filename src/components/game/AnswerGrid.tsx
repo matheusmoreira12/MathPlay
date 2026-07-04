@@ -34,7 +34,7 @@ export const AnswerGrid: React.FC = () => {
           <Button
             key={`${currentQuestion.num1}-${currentQuestion.operator}-${currentQuestion.num2}-opt-${option}`}
             variant={finalVariant}
-            size="xl"
+            size="lg"
             onClick={() => submitAnswer(option)}
             disabled={feedback !== null}
             className={feedback !== null ? 'opacity-80 transition-opacity' : ''}

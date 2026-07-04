@@ -16,11 +16,18 @@ export const GameScreen: React.FC = () => {
     togglePause, 
     quitGame, 
     timeLeft, 
-    difficulty 
+    difficulty,
+    grade
   } = useGame();
 
   const getTimeLimit = () => {
-    if (difficulty === 'easy') return 25;
+    if (grade === '3' || grade === '4') {
+      if (difficulty === 'easy') return 50;
+      if (difficulty === 'medium') return 40;
+      return 30;
+    }
+    // Grade 5
+    if (difficulty === 'easy') return 30;
     if (difficulty === 'medium') return 20;
     return 15;
   };

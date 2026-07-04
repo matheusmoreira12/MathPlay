@@ -31,7 +31,7 @@ export const ScoreBoard: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col w-full max-w-2xl px-6 py-4 bg-white/70 backdrop-blur-md rounded-[2.5rem] mb-6 shadow-sm border-2 border-white/80">
+    <div className="flex flex-col w-full max-w-2xl px-6 py-4 bg-white/70 backdrop-blur-md rounded-[2.5rem] mb-4 shadow-sm border-2 border-white/80">
       {/* Top panel */}
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center gap-2">
